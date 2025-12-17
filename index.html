@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAS 2027 | SECURE PORTAL</title>
+    <style>
+        /* DYNAMIC THEME VARIABLES */
+        :root {
+            --bg-main: #000000;
+            --bg-side: #0d0d0d;
+            --bg-header: #0a0a0a;
+            --accent: #2563eb;
+            --text-main: #ffffff;
+            --text-dim: #777;
+            --border: #222;
+        }
+
+        /* THEME CLASSES */
+        .theme-white { --bg-main: #ffffff; --bg-side: #f0f0f0; --bg-header: #e0e0e0; --accent: #2563eb; --text-main: #000000; --text-dim: #555; --border: #ccc; }
+        .theme-red { --bg-main: #2b0000; --bg-side: #420000; --bg-header: #1a0000; --accent: #ff0000; --text-main: #ffffff; --text-dim: #ff9999; --border: #660000; }
+        .theme-blue { --bg-main: #000a1a; --bg-side: #001a33; --bg-header: #00050d; --accent: #3399ff; --text-main: #ffffff; --text-dim: #99ccff; --border: #003366; }
+
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        /* HEADER */
+        header {
+            height: 100px;
+            background: var(--bg-header);
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+        }
+
+        .user-info { width: 250px; }
+        #timer { color: #ff0000; font-family: monospace; font-size: 14px; font-weight: bold;}
+
+        .logo-center img { height: 75px; }
+
+        .top-nav { display: flex; align-items: center; gap: 10px; }
+        .btn { padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; border: 1px solid var(--border); font-size: 12px; }
+        .btn-accent { background: var(--accent); color: #fff; border: none; }
+        
+        /* Dropdown Styling */
+        .settings-container { position: relative; display: inline-block; }
+        #themeDropdown { 
+            display: none; position: absolute; right: 0; background: var(--bg-side); 
+            border: 1px solid var(--border); min-width: 150px; z-index: 1000; padding: 5px;
+        }
+        #themeDropdown div { padding: 10px; cursor: pointer; font-size: 12px; border-radius: 4px;}
+        #themeDropdown div:hover { background: var(--accent); color: white; }
+
+        /* SIDEBAR & CONTENT */
+        .page-wrapper { display: flex; height: calc(100vh - 100px); }
+        
+        .sidebar {
+            width: 250px;
+            background: var(--bg-side);
+            border-right: 2px solid var(--border);
+            display: flex; flex-direction: column; justify-content: space-between; padding-top: 30px;
+        }
+
+        .nav-tabs-container { display: flex; flex-direction: column; }
+
+        .nav-tab {
+            padding: 20px 30px; color: var(--text-dim); text-decoration: none;
+            font-weight: 800; font-size: 14px; border-left: 5px solid transparent; cursor: pointer;
+            transition: 0.2s;
+        }
+
+        /* Active Sidebar Item Style */
+        .nav-tab.active { color: var(--text-main); background: rgba(255,255,255,0.05); border-left-color: var(--accent); }
+
+        /* GEMINI AD STYLING */
+        .gemini-ad {
+            margin: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(20,20,20,1) 0%, rgba(0,0,0,1) 100%);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: block;
+        }
+        .gemini-ad:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.2);
+            border-color: var(--accent);
+        }
+        .gemini-logo-text {
+            font-weight: 900;
+            background: linear-gradient(to right, #4285F4, #9b72cb, #d96570);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 18px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .gemini-ad p { font-size: 10px; color: var(--text-dim); margin: 5px 0; }
+        .gemini-btn { font-size: 10px; color: var(--accent); font-weight: bold; text-transform: uppercase; }
+
+        /* Content Pages */
+        .main-content { flex: 1; padding: 50px; overflow-y: auto; }
+        
+        /* Page Display Logic */
+        .view-page { display: none; }
+        .view-page.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .article { margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        .article h2 { color: var(--accent); margin-top: 0; }
+
+        /* HOME SPECIFIC */
+        .home-hero { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
+        .home-hero h1 { font-size: 60px; margin: 0; letter-spacing: 5px; }
+        .thought-box { 
+            padding: 20px; 
+            border-left: 2px solid var(--accent); 
+            background: rgba(255,255,255,0.02);
+            font-style: italic;
+            color: var(--text-dim);
+            max-width: 600px;
+        }
+
+        /* MODALS */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; }
+        .modal-box { background: var(--bg-side); width: 380px; margin: 100px auto; padding: 40px; border-radius: 10px; border: 1px solid var(--border); text-align: center; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 12px; background: #000; border: 1px solid var(--border); color: #fff; border-radius: 5px; }
+
+    </style>
+</head>
+<body id="body">
+
+    <header>
+        <div class="user-info">
+            <div style="color:var(--accent); font-weight:bold" id="displayUser">NotSignedIn</div>
+            <div id="timer">00D : 00H : 00M : 00S</div>
+        </div>
+
+        <div class="logo-center">
+            <img src="ras2027.png" alt="RAS 2027">
+        </div>
+
+        <div class="top-nav">
+            <button class="btn" onclick="toggleModal('bugModal')" title="Report Bug">🔧 Bug Report</button>
+            
+            <div class="settings-container">
+                <button class="btn" onclick="toggleDropdown()">⚙️ Settings</button>
+                <div id="themeDropdown">
+                    <div onclick="setTheme('black')">Dark Mode (Default)</div>
+                    <div onclick="setTheme('white')">Light Mode</div>
+                    <div onclick="setTheme('red')">Red Alert Mode</div>
+                    <div onclick="setTheme('blue')">Deep Blue Mode</div>
+                </div>
+            </div>
+
+            <button class="btn btn-accent" onclick="toggleModal('authModal')">LOGIN</button>
+        </div>
+    </header>
+
+    <div class="page-wrapper">
+        <nav class="sidebar">
+            <div class="nav-tabs-container">
+                <div class="nav-tab active" onclick="showPage('home-page', this)">0. HOME</div>
+                <div class="nav-tab" onclick="showPage('news-page', this)">1. NEWS</div>
+                <div class="nav-tab" onclick="showPage('dev-page', this)">2. DEVELOPMENT</div>
+                <div class="nav-tab" onclick="showPage('archive-page', this)">3. ARCHIVES</div>
+                <div class="nav-tab" onclick="showPage('settings-page', this)">4. PROJECT STATS</div>
+            </div>
+
+            <a href="https://gemini.google.com" target="_blank" class="gemini-ad">
+                <span class="gemini-logo-text">Gemini AI</span>
+                <p>The next-gen AI partner for your projects.</p>
+                <div class="gemini-btn">Try Gemini →</div>
+            </a>
+        </nav>
+
+        <main class="main-content">
+            
+            <div id="home-page" class="view-page active">
+                <div class="home-hero">
+                    <h1>RAS</h1>
+                    <img src="ras2027.png" alt="Logo" style="height: 80px;">
+                </div>
+                <div class="thought-box">
+                    "Humans have created atomic bomb, but a mouse will never build a mousetrap."
+                </div>
+                <p style="margin-top: 40px; color: var(--text-dim);">
+                    Welcome to the Secure Terminal. Access restricted data via the navigation sidebar.
+                </p>
+            </div>
+
+            <div id="news-page" class="view-page">
+                <h1>PROJECT INTEL</h1>
+                <div class="article">
+                    <h2>i.) PROJECT UPDATE: RAS DELAYED TO 2027</h2>
+                    <p>The official operational date has been moved to 2027 due to unavoidable technical optimizations and server synchronization.</p>
+                </div>
+                <div class="article">
+                    <h2>ii.) MILESTONE: STAGE 0 CLEARED</h2>
+                    <p>Foundational logic framework validated. High-fidelity asset integration is now underway.</p>
+                </div>
+            </div>
+
+            <div id="dev-page" class="view-page">
+                <h1>DEVELOPMENT LOGS</h1>
+                <p><strong>Current Phase:</strong> Stage 1 (Asset Integration)</p>
+                <ul>
+                    <li>Core physics engine: [COMPLETED]</li>
+                    <li>Global latency tests: [IN PROGRESS]</li>
+                    <li>User Interface Refinement: [PENDING]</li>
+                </ul>
+            </div>
+
+            <div id="archive-page" class="view-page">
+                <h1>DATA ARCHIVES</h1>
+                <p>Accessing previous project iterations... [ACCESS DENIED]</p>
+                <p style="color:var(--text-dim)">You must be signed in as Admin to view historical logs.</p>
+            </div>
+
+            <div id="settings-page" class="view-page">
+                <h1>PROJECT STATS</h1>
+                <p><strong>Uptime:</strong> 99.9%</p>
+                <p><strong>Database:</strong> Encrypted (AES-256)</p>
+                <p><strong>Build Version:</strong> 0.0.1-Alpha</p>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="authModal" class="modal">
+        <div class="modal-box">
+            <h2>SECURE GATEWAY</h2>
+            <form id="authForm">
+                <input type="text" id="uName" placeholder="Username" required>
+                <input type="email" id="uEmail" placeholder="Email" required>
+                <input type="password" id="uPass" placeholder="Security Password" required>
+                <button type="submit" class="btn btn-accent" style="width:100%; padding:15px">AUTHORIZE</button>
+            </form>
+            <p onclick="toggleModal('authModal')" style="cursor:pointer; margin-top:15px; font-size:12px; color:var(--text-dim)">[ CLOSE ]</p>
+        </div>
+    </div>
+
+    <div id="bugModal" class="modal">
+        <div class="modal-box">
+            <h2>🔧 BUG SUBMISSION</h2>
+            <form id="bugForm">
+                <input type="text" id="bugTitle" placeholder="Issue Subject" required>
+                <textarea id="bugDesc" placeholder="Describe the error in detail..." rows="4" required></textarea>
+                <button type="submit" class="btn btn-accent" style="width:100%; padding:15px">SEND TO ADMIN</button>
+            </form>
+            <p onclick="toggleModal('bugModal')" style="cursor:pointer; margin-top:15px; font-size:12px; color:var(--text-dim)">[ CANCEL ]</p>
+        </div>
+    </div>
+
+    <script>
+        function showPage(pageId, element) {
+            const pages = document.querySelectorAll('.view-page');
+            pages.forEach(p => p.classList.remove('active'));
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            element.classList.add('active');
+        }
+
+        function toggleDropdown() {
+            const drop = document.getElementById('themeDropdown');
+            drop.style.display = drop.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function setTheme(mode) {
+            document.getElementById('body').className = (mode === 'black') ? '' : 'theme-' + mode;
+            document.getElementById('themeDropdown').style.display = 'none';
+        }
+
+        function toggleModal(id) {
+            const m = document.getElementById(id);
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        }
+
+        const target = new Date("Dec 1, 2027 00:00:00").getTime();
+        setInterval(() => {
+            const now = new Date().getTime();
+            const gap = target - now;
+            const d = Math.floor(gap / 86400000);
+            const h = Math.floor((gap % 86400000) / 3600000);
+            const m = Math.floor((gap % 3600000) / 60000);
+            const s = Math.floor((gap % 60000) / 1000);
+            document.getElementById("timer").innerText = `${d}D : ${h}H : ${m}M : ${s}S`;
+        }, 1000);
+
+        document.getElementById("authForm").onsubmit = function(e) {
+            e.preventDefault();
+            const name = document.getElementById("uName").value;
+            const email = document.getElementById("uEmail").value;
+            if (["pe", "ras", "cities", "admin"].some(w => name.toLowerCase().includes(w)) && email !== "aishwarymishra55@gmail.com") {
+                alert("Restricted Username!"); return;
+            }
+            document.getElementById("displayUser").innerText = name;
+            window.location.href = `mailto:SyntaxSmith11@outlook.com?subject=Auth&body=Name:${name}`;
+            toggleModal('authModal');
+        };
+
+        document.getElementById("bugForm").onsubmit = function(e) {
+            e.preventDefault();
+            const desc = document.getElementById('bugDesc').value;
+            window.location.href = `mailto:SyntaxSmith11@outlook.com?subject=BUG_REPORT&body=${desc}`;
+            toggleModal('bugModal');
+        };
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.btn')) {
+                document.getElementById('themeDropdown').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
